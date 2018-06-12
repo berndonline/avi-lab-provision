@@ -1,0 +1,133 @@
+#!/bin/bash
+## Usage: avise [options] ARG1
+## Description: This script manages and provides manage of the Avi Controller service.
+## Author: Eric Anderson <support@avinetworks.com>
+
+
+if [ -f /etc/default/avicontroller ]; then
+  . /etc/default/avicontroller
+elif [ -f /etc/sysconfig/avicontroller ]; then
+  . /etc/sysconfig/avicontroller
+else
+  echo "Failed to start: missing defaults"
+  exit 1
+fi
+
+
+write_log() {
+  echo $1 2>&1 | tee -a ${AVICONTROLLER_LOGFILE}
+}
+
+container_running() {
+  /usr/bin/docker ps -f name=avicontroller | grep -q avicontroller
+}
+
+container_exists() {
+  /usr/bin/docker ps -a -f name=avicontroller | grep -q avicontroller
+}
+
+start_container() {
+  write_log "[`date`] Starting the avicontroller container"
+  /usr/bin/docker run ${AVICONTROLLER_DOCKER_RUN_PARAMS}
+  if [ $? -eq 0 ]; then
+    write_log "[`date`] Service avicontroller running..."
+  else
+    write_log "[`date`] Failed to start the avicontroller container"
+    exit 1
+  fi
+}
+
+stop_container() {
+  /usr/bin/docker stop -t 60 avicontroller
+  if [ $? -eq 0 ]; then
+    write_log "[`date`] Stopped the avicontroller container"
+  else
+    exit 1
+  fi
+}
+
+remove_container() {
+  write_log "[`date`] Removing existing avicontroller container"
+  /usr/bin/docker rm -f avicontroller
+  if [ $? -eq 0 ]; then
+    write_log "[`date`] Removed existing avicontroller container"
+  else
+    write_log "[`date`] Failed to remove existing avicontroller container"
+  fi
+}
+
+prestart() {
+  # Clean up any running or existing avicontroller containers
+  write_log "[`date`] Performing avicontroller pre-start step."
+  if container_running && container_exists; then
+    write_log "[`date`] Service avicontroller is already running."
+  elif ! container_running && container_exists; then
+    write_log "[`date`] Container avicontroller already exists, but not running. This can be caused by an
+      improper shutdown, or service crash. Performing cleanup"
+    remove_container
+    start_container
+  else
+    start_container
+  fi
+}
+
+start() {
+  prestart
+  /usr/bin/docker wait avicontroller
+}
+
+stop() {
+  # Stopping the docker process if running
+  if container_running; then
+    write_log "[`date`] Service avicontroller stopping..."
+    stop_container
+  else
+    write_log "[`date`] Service avicontroller already stopped"
+  fi
+  poststop
+}
+
+poststop() {
+  if $(ip addr | grep -q ${AVICONTROLLER_DEV_NAME}:avivip); then
+    /bin/bash -c "ip addr del $(ip addr | grep ${AVICONTROLLER_DEV_NAME}:avivip | awk '{print $2}') dev ${AVICONTROLLER_DEV_NAME}"
+    if [ $? -eq 0 ]; then
+      write_log "[`date`] Successfuly removed the cluster vip interface."
+    fi
+  elif $(ip addr | grep -q ${AVICONTROLLER_DEV_NAME}:1); then
+    /bin/bash -c "ip addr del $(ip addr | grep ${AVICONTROLLER_DEV_NAME}:1 | awk '{print $2}') dev ${AVICONTROLLER_DEV_NAME}"
+    if [ $? -eq 0 ]; then
+      write_log "[`date`] Successfuly removed the cluster vip interface."
+    fi
+  fi
+  if container_exists; then
+    remove_container
+  fi
+}
+
+restart() {
+  stop
+  start
+}
+
+reload() {
+  restart
+}
+
+status() {
+  if container_running; then
+    echo "avicontroller running..."
+  else
+    echo "avicontroller stopped"
+  fi
+}
+
+case "$1" in
+  start|stop|status|restart|reload)
+    $1
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop|status|restart|reload}"
+    exit 2
+esac
+
+exit $?

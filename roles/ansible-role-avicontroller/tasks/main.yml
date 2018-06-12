@@ -1,0 +1,4 @@
+---
+# tasks file for avinetworks.avicontroller
+- name: Avi Controller | Deployment
+  include: "{{ con_deploy_type|lower }}/main.yml"

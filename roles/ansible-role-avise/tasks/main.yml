@@ -1,0 +1,12 @@
+---
+# tasks file for avinetworks.avise
+
+# This task will appropriately start the selected type of deployment.
+# It was added to prevent mass "skipped" messages when deploying Avi.
+- name: Avi SE | Set facts
+  set_fact:
+    se_autoregister: false
+  when: se_auth_token != None
+
+- name: Avi SE | Deployment
+  include: "{{ se_deploy_type }}/main.yml"

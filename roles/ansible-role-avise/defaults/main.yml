@@ -1,0 +1,127 @@
+---
+# Variable defaults file for avinetworks.avise
+
+# set the type of deployment
+se_deploy_type: docker
+
+# standard parameters
+se_skip_requirements: false
+
+# se_autoregister parameters
+se_autoregister: true
+se_auth_token: ~
+se_master_ctl_ip: ~
+se_master_ctl_username: ~
+se_master_ctl_password: ~
+se_cloud_name: Default-Cloud
+se_tenant: admin
+
+# parameters for use when deploying as package
+se_package_deploy: false
+se_package_source: se_docker.tgz
+se_package_dest: /tmp/se_docker.tgz
+
+# parameters for use when pulling from docker hub or docker repo
+se_docker_repo: ~
+se_docker_repo_user: ~
+se_docker_repo_password: ~
+se_version: 16.4.4-9007-20170506.145733
+se_image: "avinetworks/se:{{ se_version }}"
+
+# parameters for the CSP deployment
+se_csp_user: ~
+se_csp_password: ~
+se_csp_qcow_image_file: se.qcow
+se_csp_qcow_image_name: "{{ se_csp_qcow_image_file|basename }}"
+se_csp_mgmt_ip: ~
+se_csp_mgmt_mask: ~
+se_csp_default_gw: ~
+se_csp_tenant_uuid: ~
+se_csp_disk_size: 64
+se_csp_disk_type: virtio
+se_csp_platform: csp-2100
+se_csp_service_name: avi-se
+se_csp_metafile_name: avi_meta_{{ se_csp_service_name }}.yml
+se_csp_num_cpu: 4
+se_csp_memory_gb: 16
+se_csp_memory_mb: "{{ se_csp_memory_gb|int * 1024 }}"
+se_csp_vnics:
+  - nic: "0"
+    type: access
+    tagged: "false"
+    network_name: enp1s0f0
+  - nic: 1
+    type: passthrough
+    passthrough_mode: sriov
+    vlan: 200
+    network_name: enp7s0f0
+  - nic: 2
+    type: passthrough
+    passthrough_mode: sriov
+    vlan: 201
+    network_name: enp7s0f1
+se_csp_meta_config: {}
+se_csp_meta_options:
+  AVICNTRL: "{{ se_master_ctl_ip }}"
+  AVICNTRL_AUTHTOKEN: "{{ se_auth_token }}"
+  avi.mgmt-ip.SE: "{{ se_csp_mgmt_ip | default(None) }}"
+  avi.mgmt-mask.SE: "{{ se_csp_mgmt_mask | default(None) }}"
+  avi.default-gw.SE: "{{ se_csp_default_gw | default(None) }}"
+  avi.bond-ifs.SE: "{{ se_csp_bond_ifs | default(None) }}"
+  avi.bond-mode.SE: "{{ se_csp_bond_mode | default(None) }}"
+  avi.asm-ip.SE: "{{ se_csp_asm_ip | default(None) }}"
+  avi.asm-mask.SE: "{{ se_csp_asm_mask | default(None) }}"
+  avi.asm-static-routes.SE: "{{ se_csp_asm_static_routes | default(None) }}"
+  avi.asm-vnic-id.SE: "{{ se_csp_asm_vnic_id | default(None) }}"
+  avi.hsm-ip.SE: "{{ se_csp_hsm_ip | default(None) }}"
+  avi.hsm-mask.SE: "{{ se_csp_hsm_mask | default(None) }}"
+  avi.hsm-static-routes.SE: "{{ se_csp_hsm_static_routes | default(None) }}"
+  avi.hsm-vnic-id.SE: "{{ se_csp_hsm_vnic_id | default(None) }}"
+
+### docker deployment parameters ###
+se_fresh_install: false
+se_inband_mgmt: false
+se_cores: "{{ ansible_processor_cores * ansible_processor_count }}"
+se_memory_gb: "{{ ansible_memtotal_mb / 1024 }}"
+se_destination_disk: "{{ ansible_mounts|sort(reverse=True, attribute='size_total')|map(attribute='mount')|first}}"
+se_disk_path: "{{ se_destination_disk }}/opt/avi/se/data"
+se_disk_gb: 10
+se_logs_disk_path: ~
+se_logs_disk_gb: ~
+
+# If se_dpdk set to true, will configure host for DPDK
+se_dpdk: false
+se_dpdk_klms_file: dpdk_klms.tar.gz
+se_dpdk_supported_nics: "82599|82598|X540|X710|XL710"
+
+# Mount variables which are sent to the docker container, these are used in the service templates.
+se_mounts_extras: []
+se_mounts_default:
+  - "/mnt:/mnt"
+  - "/dev:/dev"
+  - "/etc/sysconfig/network-scripts:/etc/sysconfig/network-scripts"
+  - "/:/hostroot/"
+  - "/etc/hostname:/etc/host_hostname"
+  - "/etc/localtime:/etc/localtime"
+  - "/var/run/docker.sock:/var/run/docker.sock"
+  - "{{ (se_disk_path == None) | ternary('', se_disk_path ~ ':/vol/') }}"
+  - "{{ (se_logs_disk_path == None) | ternary('', se_logs_disk_path ~ ':/vol_logs/') }}"
+se_mounts_all: "{{ se_mounts_extras + se_mounts_default}}"
+se_mounts_string: "{% for mount_var in se_mounts_all|reject('match', '^$') %} -v {{ mount_var }}{% endfor %}"
+
+# Environment variables which are sent to the docker container, these are used in the service templates.
+se_env_variables_extras: []
+se_env_variables_default:
+  - "CONTAINER_NAME=avise"
+  - "CONTROLLERIP={{ se_master_ctl_ip | string }}"
+  - "NTHREADS={{ se_cores|int }}"
+  - "SEMEMMB={{ se_memory_gb|int * 1024 }}"
+  - "{{ se_inband_mgmt | ternary('SE_INBAND_MGMT=true', 'SE_INBAND_MGMT=false') }}"
+  - "{{ se_dpdk | ternary('DOCKERNETWORKMODE=HOST_DPDK', 'DOCKERNETWORKMODE=HOST') }}"
+  - "{{ (se_disk_gb == None) | ternary('', 'DISKSZ=' + ( se_disk_gb|int * 1024 )|string ) }}"
+  - "{{ (se_logs_disk_gb == None) | ternary('', 'LOG_DISKSZ=' + ( se_logs_disk_gb|int * 1024 )|string ) }}"
+se_env_variables_all: "{{ se_env_variables_extras + se_env_variables_default }}"
+se_env_variables_string: "{% for env_var in se_env_variables_all|reject('match', '^$') %} -e {{ env_var }}{% endfor %}"
+
+# !!!! BEWARE: This is to completely override everything passed into the service template for the docker run. DON'T EDIT THIS UNLESS YOU KNOW WHAT YOUR DOING!!!!!
+se_docker_run_params: "--name=avise -d{{ se_env_variables_string }} --net=host{{ se_mounts_string }} --privileged=true {{ se_image }}"
