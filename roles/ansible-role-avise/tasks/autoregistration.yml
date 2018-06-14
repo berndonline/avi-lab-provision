@@ -16,6 +16,7 @@
     url: "https://{{ se_master_ctl_ip }}/api/initial-data"
     validate_certs: no
   register: controller_initial_data
+  become: no
   delegate_to: localhost
 
 - name: Avi SE | Autoregistration | Set Controller version information
@@ -35,6 +36,7 @@
     http_method: get
     path: "cloud?name={{ se_cloud_name }}"
   register: se_cloud_data
+  become: no
   delegate_to: localhost
 
 - name: Avi SE | Autoregistration | Get a token from the Avi Controller
@@ -47,6 +49,7 @@
     http_method: get
     path: securetoken-generate?cloud_uuid={{ se_cloud_data.obj.results[0].uuid}}
   register: se_authtoken
+  become: no
   delegate_to: localhost
 
 - name: Avi SE | Autoregistration | Append the token to the docker environment variables.
