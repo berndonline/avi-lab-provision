@@ -13,7 +13,7 @@ con_force_deploy: false # Reploys Docker container without deleting config
 
 se_deploy_type: docker
 se_autoregister: true
-se_master_ctl_ip: 10.255.1.120
+se_master_ctl_ip: "{{ hostvars['avi-controller-1'].ansible_ssh_host }}"
 se_master_ctl_username: admin
 se_master_ctl_password: test123!
 se_cloud_name: Default-Cloud
