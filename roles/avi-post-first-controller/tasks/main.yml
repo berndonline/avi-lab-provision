@@ -1,0 +1,27 @@
+---
+
+- name: wait for cluster up
+  uri:
+    url: "https://{{ ansible_ssh_host }}/api/cluster/runtime"
+    method: GET
+    validate_certs: false
+    return_content: true
+  register: cluster_up
+  until: ( cluster_up.status == 200 ) and ( cluster_up.json.cluster_state.state == 'CLUSTER_UP_NO_HA' )
+  retries: 30
+  delay: 10
+
+- name: change default admin password on cluster build when subscription
+  uri:
+    url: "https://{{ ansible_ssh_host }}/api/useraccount"
+    method: PUT
+    user: "{{ avi_username }}"
+    password: "{{ avi_default_password }}"
+    return_content: yes
+    body: {"old_password":"{{ avi_default_password }}", password: "{{ avi_password }}"}
+    body_format: json
+    force_basic_auth: yes
+    validate_certs: false
+    status_code: 200
+    timeout: 180
+  when: ( avi_change_default | default(false ) | bool )

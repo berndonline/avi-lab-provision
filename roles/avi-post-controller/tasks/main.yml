@@ -1,0 +1,12 @@
+---
+
+- name: wait for cluster up
+  uri:
+    url: "https://{{ ansible_ssh_host }}/api/cluster/runtime"
+    method: GET
+    validate_certs: false
+    return_content: true
+  register: cluster_up
+  until: ( cluster_up.status == 200 ) and ( cluster_up.json.cluster_state.state == 'CLUSTER_UP_NO_HA' )
+  retries: 30
+  delay: 10

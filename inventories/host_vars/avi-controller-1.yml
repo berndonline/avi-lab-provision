@@ -1,2 +1,3 @@
 ---
 con_setup_json: ~/avi-images/setup.json # Base config for AVI Controller - required for ZTP
+avi_controller_leader: true
