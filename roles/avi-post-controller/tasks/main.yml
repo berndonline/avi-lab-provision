@@ -1,6 +1,6 @@
 ---
 
-- name: wait for cluster up
+- name: wait for cluster nodes up
   uri:
     url: "https://{{ ansible_ssh_host }}/api/cluster/runtime"
     method: GET

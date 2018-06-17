@@ -45,7 +45,7 @@
             "tenant_uuid": "admin",
           }
 
-    - name: wait for three node cluster up
+    - name: wait for cluster become active
       uri:
         url: "https://10.255.1.177/api/cluster/runtime"
         method: GET
