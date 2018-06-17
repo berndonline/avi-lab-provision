@@ -1,0 +1,33 @@
+---
+- hosts: localhost
+  vars:
+    controller: 10.255.1.177
+    username: admin
+    password: test123!
+  connection: local
+  roles:
+    - role: avinetworks.avisdk
+  tasks:
+    - name: test
+      debug: msg="{{ controller }}"
+
+    - name: Fetch Avi Version
+      avi_api_version:
+        controller: "{{ controller }}"
+        username: "{{ username }}"
+        password: "{{ password }}"
+      register: avi_version
+
+    - debug: msg="{{avi_version}}"
+
+    - name: Example to create Cluster object
+      avi_api_session:
+        controller: "{{ controller }}"
+        username: "{{ username }}"
+        password: "{{ password }}"
+        http_method: get
+        path: cluster
+        api_version: 17.2.11
+      register: avi_cluster
+
+    - debug: msg="{{avi_cluster}}"

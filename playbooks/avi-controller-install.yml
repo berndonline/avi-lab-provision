@@ -5,5 +5,5 @@
   gather_facts: true
   roles:
     - { role: ansible-role-avicontroller, become: yes }
-    - { role: avi-post-first-controller, become: no, when: avi_controller_leader | default (false) | bool }
+    - { role: avi-post-first-controller, become: yes, when: avi_controller_leader | default (false) | bool }
     - { role: avi-post-controller, become: no, when: avi_controller_leader is undefined }

@@ -1,0 +1,56 @@
+---
+- hosts: localhost
+  connection: local
+  roles:
+    - role: avinetworks.avisdk
+  tasks:
+    - name: Example to create Cluster object
+      avi_api_session:
+        controller: 10.255.1.177
+        username: admin
+        password: test123!
+        http_method: put
+        path: cluster
+        api_version: 17.2.11
+        data:
+          {
+            "name": "cluster-0-1",
+            "nodes": [
+                {
+                    "ip": {
+                        "addr": "10.255.1.177",
+                        "type": "V4"
+                    },
+                    "name": "10.255.1.177",
+                    "vm_hostname": "node1.controller.local",
+                },
+                {
+                    "ip": {
+                        "addr": "10.255.1.68",
+                        "type": "V4"
+                    },
+                    "name": "10.255.1.68",
+                    "vm_hostname": "node2.controller.local",
+                },
+                {
+                    "ip": {
+                        "addr": "10.255.1.32",
+                        "type": "V4"
+                    },
+                    "name": "10.255.1.32",
+                    "vm_hostname": "node3.controller.local",
+                }
+            ],
+            "tenant_uuid": "admin",
+          }
+
+    - name: wait for three node cluster up
+      uri:
+        url: "https://10.255.1.177/api/cluster/runtime"
+        method: GET
+        validate_certs: false
+        return_content: true
+      register: cluster_up
+      until: ( cluster_up.status == 200 ) and ( cluster_up.json.cluster_state.state == 'CLUSTER_UP_HA_ACTIVE' )
+      retries: 30
+      delay: 10
