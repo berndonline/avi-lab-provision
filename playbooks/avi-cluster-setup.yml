@@ -1,14 +1,15 @@
 ---
+
 - hosts: localhost
   connection: local
   roles:
-    - role: avinetworks.avisdk
+    - role: ansible-role-avisdk
   tasks:
     - name: Example to create Cluster object
       avi_api_session:
         controller: 10.255.1.177
-        username: admin
-        password: test123!
+        username: "{{ avi_username }}"
+        password: "{{ avi_default_password }}"
         http_method: put
         path: cluster
         api_version: 17.2.11
