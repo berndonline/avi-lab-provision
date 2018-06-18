@@ -3,4 +3,4 @@
 - hosts: localhost
   connection: local
   roles:
-    - { role: avi-cluster-setup, become: no }
+    - {role: avi-cluster-setup, become: false}
