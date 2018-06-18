@@ -2,7 +2,7 @@
 
 - name: change default admin password on cluster build when subscription
   uri:
-    url: "https://{{ ansible_ssh_host }}/api/useraccount"
+    url: "https://{{ hostvars['avi-controller-1'].ansible_ssh_host }}/api/useraccount"
     method: PUT
     user: "{{ avi_username }}"
     password: "{{ avi_default_password }}"

@@ -4,3 +4,4 @@
   connection: local
   roles:
     - {role: avi-cluster-setup, become: false}
+    - {role: avi-change-password, become: false, when: avi_change_default == true}
