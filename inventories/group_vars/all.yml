@@ -2,7 +2,7 @@
 avi_username: admin
 avi_password: test456!
 avi_default_password: test123!
-avi_change_default: false
+avi_change_password: false
 
 controller_ips: [10.255.1.177, 10.255.1.68, 10.255.1.32]
 
