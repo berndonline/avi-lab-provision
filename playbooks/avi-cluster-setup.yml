@@ -4,8 +4,17 @@
   connection: local
   roles:
     - role: ansible-role-avisdk
+  vars:
+    controller_ips: [10.255.1.177, 10.255.1.68, 10.255.1.32]
   tasks:
-    - name: Example to create Cluster object
+    - name: set AVI cluster facts
+      set_fact:
+        avi_cluster:
+          name: cluster-0-1
+          nodes: "{{ controller_ips | compile_node_ips }}"
+          tenant_uuid: admin
+
+    - name: configure AVI cluster
       avi_api_session:
         controller: 10.255.1.177
         username: "{{ avi_username }}"
@@ -13,37 +22,7 @@
         http_method: put
         path: cluster
         api_version: 17.2.11
-        data:
-          {
-            "name": "cluster-0-1",
-            "nodes": [
-                {
-                    "ip": {
-                        "addr": "10.255.1.177",
-                        "type": "V4"
-                    },
-                    "name": "10.255.1.177",
-                    "vm_hostname": "node1.controller.local",
-                },
-                {
-                    "ip": {
-                        "addr": "10.255.1.68",
-                        "type": "V4"
-                    },
-                    "name": "10.255.1.68",
-                    "vm_hostname": "node2.controller.local",
-                },
-                {
-                    "ip": {
-                        "addr": "10.255.1.32",
-                        "type": "V4"
-                    },
-                    "name": "10.255.1.32",
-                    "vm_hostname": "node3.controller.local",
-                }
-            ],
-            "tenant_uuid": "admin",
-          }
+        data: "{{ avi_cluster }}"
 
     - name: wait for cluster become active
       uri:
