@@ -7,6 +7,6 @@
     validate_certs: false
     return_content: true
   register: cluster_up
-  until: ( cluster_up.status == 200 ) and ( cluster_up.json.cluster_state.state == 'CLUSTER_UP_NO_HA' )
+  until: ( cluster_up.status == 200 ) and ( cluster_up.json.cluster_state.state == 'CLUSTER_UP_NO_HA' or 'CLUSTER_UP_HA_ACTIVE' )
   retries: 30
   delay: 10

@@ -1,0 +1,28 @@
+---
+- name: set AVI cluster facts
+  set_fact:
+    avi_cluster:
+      name: cluster-0-1
+      nodes: "{{ controller_ips | compile_node_ips }}"
+      tenant_uuid: admin
+
+- name: configure AVI cluster
+  avi_api_session:
+    controller: "{{ hostvars['avi-controller-1'].ansible_ssh_host }}"
+    username: "{{ avi_username }}"
+    password: "{{ avi_default_password }}"
+    http_method: put
+    path: cluster
+    api_version: 17.2.11
+    data: "{{ avi_cluster }}"
+
+- name: wait for cluster become active
+  uri:
+    url: "https://{{ hostvars['avi-controller-1'].ansible_ssh_host }}/api/cluster/runtime"
+    method: GET
+    validate_certs: false
+    return_content: true
+  register: cluster_up
+  until: ( cluster_up.status == 200 ) and ( cluster_up.json.cluster_state.state == 'CLUSTER_UP_HA_ACTIVE' )
+  retries: 30
+  delay: 10
