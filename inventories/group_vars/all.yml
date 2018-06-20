@@ -21,7 +21,7 @@ con_memory_gb: "{{ ansible_memtotal_mb // 1024 }}"
 con_disk_gb: 10
 con_controller_ip: "{{ ansible_default_ipv4.address }}"
 # con_setup_json: ~/avi-images/setup.json # Base config for AVI Controller - moved to host_vars only needed for 1st controller
-con_fresh_install: true # Removes config and does clean install - requires that AVI controller is installed otherwise fails
+con_fresh_install: false # Removes config and does clean install - requires that AVI controller is installed otherwise fails
 con_force_deploy: false # Reploys Docker container without deleting config
 
 se_deploy_type: docker
