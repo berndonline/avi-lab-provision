@@ -6,6 +6,12 @@ avi_change_password: false
 
 controller_ips: [10.255.1.177, 10.255.1.68, 10.255.1.32]
 
+dns_servers: [10.255.1.1]
+dns_domain: domain.com
+ntp_servers: [0.us.pool.ntp.org, 1.us.pool.ntp.org]
+
+api_version: 17.2.11
+
 con_deploy_type: docker
 con_package_deploy: true # For local installation - default set to false and uses docker hub image
 con_package_source: ~/avi-images/controller_docker.tgz # Point to the right AVI image folder
@@ -15,7 +21,7 @@ con_memory_gb: "{{ ansible_memtotal_mb // 1024 }}"
 con_disk_gb: 10
 con_controller_ip: "{{ ansible_default_ipv4.address }}"
 # con_setup_json: ~/avi-images/setup.json # Base config for AVI Controller - moved to host_vars only needed for 1st controller
-con_fresh_install: false # Removes config and does clean install - requires that AVI controller is installed otherwise fails
+con_fresh_install: true # Removes config and does clean install - requires that AVI controller is installed otherwise fails
 con_force_deploy: false # Reploys Docker container without deleting config
 
 se_deploy_type: docker
