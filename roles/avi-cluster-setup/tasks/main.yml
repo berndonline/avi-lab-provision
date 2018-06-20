@@ -1,10 +1,30 @@
 ---
+
+- name: set AVI dns and ntp facts
+  set_fact:
+    systemconfiguration:
+      dns_configuration:
+        search_domain: domain.com
+        server_list: "{{ dns_servers | compile_node_dns }}"
+      ntp_configuration:
+        ntp_servers: "{{ ntp_servers | compile_node_ntp }}"
+
 - name: set AVI cluster facts
   set_fact:
     avi_cluster:
       name: cluster-0-1
       nodes: "{{ controller_ips | compile_node_ips }}"
       tenant_uuid: admin
+
+- name: configure ntp and dns controller nodes
+  avi_api_session:
+    controller: "{{ hostvars['avi-controller-1'].ansible_ssh_host }}"
+    username: "{{ avi_username }}"
+    password: "{{ avi_default_password }}"
+    http_method: put
+    path: systemconfiguration
+    api_version: "{{ api_version }}"
+    data: "{{ systemconfiguration }}"
 
 - name: configure AVI cluster
   avi_api_session:
@@ -13,7 +33,7 @@
     password: "{{ avi_default_password }}"
     http_method: put
     path: cluster
-    api_version: 17.2.11
+    api_version: "{{ api_version }}"
     data: "{{ avi_cluster }}"
 
 - name: wait for cluster become active
